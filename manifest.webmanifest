@@ -1,0 +1,17 @@
+{
+  "name": "Mi Dinero — South Beach",
+  "short_name": "Mi Dinero",
+  "description": "Gestor de gastos e ingresos: banco, efectivo, gastos por categoría, tendencias y metas.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0d1521",
+  "theme_color": "#0d1521",
+  "lang": "es",
+  "icons": [
+    { "src": "icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" },
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any maskable" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}
