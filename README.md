@@ -1,94 +1,54 @@
-# Mi Dinero — South Beach (v27)
+# Mi Dinero — South Beach (v28)
 
-Gestor de gastos e ingresos para trabajo con propinas. Maneja dos billeteras (**Banco** y **Efectivo**), registro de gastos por categoría, ingresos (comisión/horas/tips + cheques con estimación de impuestos), gráficas de tendencia y metas con fecha.
+Gestor de gastos e ingresos para trabajo con propinas. App estática de un solo archivo (`index.html`) + **PWA** (instalable en iPhone/Android y funciona sin internet). No necesita build ni servidor.
 
-App estática de un solo archivo + soporte **PWA** (instalable en el teléfono y funciona sin internet). No necesita build ni servidor.
-
----
+## Pestañas (4)
+- **Resumen:** total disponible, billeteras (Banco / Efectivo / Ahorros), deuda y patrimonio neto, ingresos/gastos/ahorro del mes, y **métricas** (por semana, por mes, ahorro acumulado) + respaldo.
+- **Gastos:** registro simple (monto · categoría · billetera) + gastos del mes por categoría + lista.
+- **Ingresos:** registro diario (comisión/horas/tips), **próximo cheque esperado** (sobre la quincena anterior, con sueldo/hora y monto esperado editables), cheques cobrados, botón **➕ préstamo o ingreso extra**, y calendario.
+- **Metas:** **ahorro automático** (aparta un % del sobrante diario a Ahorros) + metas con fecha (el progreso se mide con tus Ahorros).
 
 ## Cómo funciona el dinero
-
-- 💵 **Tips cash** (registro diario) → suman al **Efectivo**.
-- 🏦 **Cheques cobrados** → suman al **Banco**.
-- 🧾 **Gastos** → restan de la billetera que elijas (Efectivo o Banco).
-- ✏️ Puedes **editar Banco/Efectivo a mano** cuando quieras; la app ajusta la base sin perder lo que entró por tips o cheques.
-- **Total disponible = Banco + Efectivo.** Es el número que llena tus metas.
-
-La parte de comisión/horas y la estimación de impuestos del cheque es solo **análisis/predicción** y NO se suma al balance (para no contar doble con el cheque real).
-
----
+- 💵 **Tips cash** → Efectivo. 🏦 **Cheques cobrados** → Banco.
+- 🧾 **Gastos** restan de la billetera elegida (5 categorías).
+- 🤝 **Préstamos** entran a una billetera pero quedan como **deuda** (se aclara en Resumen y en Banco; botón "Pagado" para saldar).
+- ✨ **Ingresos extra** (regalo, venta, trabajo aparte) entran a una billetera y son tuyos.
+- 🐷 **Ahorros:** apartás dinero de Banco/Efectivo a Ahorros (manual o con la sugerencia de la regla %).
+- ✏️ Banco/Efectivo/Ahorros se pueden **editar a mano** (ajustan una base sin perder los flujos).
+- **Total disponible = Banco + Efectivo.** **Patrimonio neto = disponible + Ahorros − deuda.**
+- La comisión/horas + estimación de impuestos es análisis/predicción del cheque, NO entra al balance.
 
 ## Archivos del repo
-
 ```
-index.html            ← la app completa
-manifest.webmanifest  ← datos de la PWA (nombre, íconos, colores)
-sw.js                 ← service worker (cache + offline)
-icon.svg              ← ícono vectorial
-apple-touch-icon.png  ← ícono para "Agregar a inicio" en iPhone (180px)
-icon-192.png          ← ícono PWA 192px
-icon-512.png          ← ícono PWA 512px
-package.json          ← metadata (opcional)
-README.md             ← este archivo
+index.html  manifest.webmanifest  sw.js
+icon.svg  apple-touch-icon.png  icon-192.png  icon-512.png
+package.json  README.md
 ```
+> Subí **todos** al repo de GitHub (incluí `sw.js`, `manifest.webmanifest` e íconos para que se pueda instalar en el teléfono).
 
-> ⚠️ Subí **todos** estos archivos al repo. Si falta `sw.js` o los íconos, la app igual funciona pero no se podrá instalar bien en el teléfono.
+## Desplegar (GitHub → Vercel)
+1. GitHub → tu repo → **Add file → Upload files** → arrastrá todos los archivos → **Commit**.
+2. Vercel redeploya solo en ~30s y te da el link.
 
----
+## Usarla en iPhone (sin App Store)
+Abrí el link en **Safari** → **Compartir** → **"Agregar a inicio"**. Queda como app a pantalla completa.
 
-## Subirlo a GitHub y desplegar en Vercel
-
-### 1. Crear el repo en GitHub
-1. Andá a https://github.com/new
-2. Nombre: `mi-dinero` (o el que quieras) → **Create repository**
-
-### 2. Subir los archivos
-1. En el repo nuevo, clic en **"uploading an existing file"**
-2. Arrastrá **todos** los archivos de esta carpeta
-3. **Commit changes**
-
-### 3. Conectar a Vercel
-1. https://vercel.com → entrá con GitHub
-2. **Add New → Project** → importá el repo
-3. Framework Preset: **Other** → **Deploy**
-4. En ~30s tenés tu URL: `https://mi-dinero-xxx.vercel.app`
-
-Cada cambio en GitHub redeploya solo.
-
-> Si actualizás la app, subí los archivos nuevos a GitHub. En el teléfono, cerrá y reabrí la app (o recargá en Safari) para que el service worker tome la versión nueva.
-
----
-
-## Usarla en el iPhone (sin App Store)
-
-1. Abrí tu URL de Vercel en **Safari**.
-2. Tocá el botón **Compartir** (el cuadrito con la flecha hacia arriba).
-3. Elegí **"Agregar a inicio"** / "Add to Home Screen".
-4. Listo: queda un ícono en tu pantalla, abre a pantalla completa y funciona sin internet.
-
----
-
-## ⚠️ Sobre tus datos (importante)
-
-- Los datos se guardan en **este dispositivo/navegador** (localStorage).
-- En iPhone, Safari **puede borrar** esos datos si no abrís la app por ~7 días o si limpiás el historial/datos del sitio.
-- Por eso: usá **Resumen → Exportar respaldo** cada tanto. Guardá ese archivo `.json` en Notas, Mail o Drive.
-- Si se borra algo o cambiás de teléfono: **Importar respaldo** y vuelve todo.
-- Para una solución a prueba de balas (datos en la nube con login, sincronizados entre dispositivos) hace falta un paso extra de backend — se puede agregar después.
-
----
+## ⚠️ Tus datos
+Se guardan en este dispositivo (localStorage). En iPhone pueden borrarse a los ~7 días sin uso o al limpiar Safari. Usá **Resumen → Exportar respaldo** seguido (guardalo en Notas/Mail/Drive) y **Importar respaldo** para recuperarlo.
 
 ## Claves de almacenamiento
-
 | Clave | Contenido |
 |-------|-----------|
 | `tip-savings-data` | Registro diario `{ "YYYY-MM-DD": {com,hrs,tip} }` |
-| `tip-cheques-data` | Cheques cobrados `[{id,date,label,amount}]` |
-| `tip-expenses` | Gastos `[{id,date,amount,cat,wallet}]` |
-| `tip-wallet-adjust` | Ajustes manuales de billeteras `{banco,efectivo}` |
-| `tip-tarifa` | Tarifa por hora (para estimar cheque) |
-| `tip-goals` | Metas `[{id,name,target,date,created}]` |
+| `tip-cheques-data` | Cheques cobrados |
+| `tip-expenses` | Gastos `{id,date,amount,cat,wallet}` |
+| `tip-loans` | Préstamos / deuda `{id,date,label,amount,wallet}` |
+| `tip-extra` | Ingresos extra `{id,date,label,amount,wallet}` |
+| `tip-savings-transfers` | Movimientos a Ahorros `{id,date,amount,from}` |
+| `tip-wallet-adjust` | Ajustes manuales `{banco,efectivo,ahorros}` |
+| `tip-save-rule` | % del sobrante diario a ahorrar (decimal) |
+| `tip-cheque-overrides` | Montos de cheque esperado puestos a mano `{periodo: monto}` |
+| `tip-tarifa` | Sueldo por hora (estimación del cheque) |
+| `tip-goals` | Metas `{id,name,target,date}` |
 
-## Parámetros del modelo de impuestos (Florida)
-
-Social Security 6.2% + Medicare 1.45% + Federal fijo $4.57. Editable en el código (`SS_RATE`, `MED_RATE`, `FED_FIXED`). Tarifa por hora editable desde la interfaz.
+Impuestos (Florida): Social Security 6.2% + Medicare 1.45% + federal fijo $4.57 (editables en el código).
