@@ -374,14 +374,16 @@ footer{text-align:center;color:var(--muted2);font-size:10px;letter-spacing:.04em
   <div class="vhead"><h2>Metas y ahorro</h2><p>Aparta el sobrante a tus ahorros y seguí tus objetivos.</p></div>
   <div class="save-box">
     <div class="card-hd"><div class="card-ic k">🐷</div><h3>Ahorro automático</h3></div>
-    <p class="hint">Aparta un % de lo que te sobra cada día (ingresos − gastos). La app calcula el acumulado y vos lo movés con un toque.</p>
+    <p class="hint">Cada día apartás un % de lo que te sobró HOY (ingresos de hoy − gastos de hoy). La app te dice cuánto y lo movés con un toque.</p>
     <div class="fields" style="align-items:flex-end">
       <div class="field" style="flex:0 0 auto;min-width:120px"><label>% del sobrante diario</label><div class="sfx"><span class="ss">%</span><input type="number" id="savRule" min="0" max="100" step="5" inputmode="decimal"></div></div>
     </div>
     <div style="margin-top:12px">
-      <div class="save-row"><span>Apartado en Ahorros</span><span class="v" id="savDone" style="color:var(--gold)">$0</span></div>
-      <div class="save-row"><span>Sugerido por tu regla (acumulado)</span><span class="v" id="savSug">$0</span></div>
-      <div class="save-row" style="border-top:1px solid var(--bd);padding-top:8px;margin-top:4px"><span>Pendiente de apartar</span><span class="v" id="savPend" style="color:var(--green)">$0</span></div>
+      <div class="save-row"><span>Ingresos de hoy</span><span class="v" id="savIncToday" style="color:var(--teal)">$0</span></div>
+      <div class="save-row"><span>Gastos de hoy</span><span class="v" id="savExpToday" style="color:var(--coral)">$0</span></div>
+      <div class="save-row"><span>Sobrante de hoy</span><span class="v" id="savSurToday">$0</span></div>
+      <div class="save-row" style="border-top:1px solid var(--bd);padding-top:8px;margin-top:4px"><span>Apartar hoy (<span id="savRuleLbl">0</span>%)</span><span class="v" id="savSug" style="color:var(--green)">$0</span></div>
+      <div class="save-row"><span>Apartado en Ahorros (total)</span><span class="v" id="savDone" style="color:var(--gold)">$0</span></div>
     </div>
     <div class="fields" style="margin-top:12px;align-items:flex-end">
       <div class="field" style="flex:0 0 auto;min-width:120px"><label>Apartar ahora</label><div class="pfx"><span class="ps" style="color:var(--gold)">$</span><input type="number" id="apAmt" placeholder="0.00" min="0" step="0.01" inputmode="decimal"></div></div>
@@ -532,15 +534,21 @@ function payLoan(id){const l=LOANS.find(x=>x.id===id);if(!l)return;if(!confirm(`
 function delExtra(id){EXTRA=EXTRA.filter(x=>x.id!==id);saveX();render();}
 
 /* ---- ahorro automático ---- */
-function dailySurplus(){
-  // Neto real: total de ingresos (comisión + tips + extra) menos total de gastos.
-  let inc=0,exp=0;
-  for(const k in D)inc+=(D[k].com||0)+(D[k].tip||0);
-  EXTRA.forEach(x=>inc+=x.amount);
-  EX.forEach(e=>exp+=e.amount);
-  return inc-exp;
+// Ingreso de UN día = comisión + tips + horas×sueldo + ingresos extra de ese día.
+function dayIncome(k){
+  const r=D[k]||{};
+  let inc=(r.com||0)+(r.tip||0)+(r.hrs||0)*TAR;
+  EXTRA.forEach(x=>{if(x.date===k)inc+=x.amount;});
+  return inc;
 }
-function savingsSuggested(){return Math.round(Math.max(0,dailySurplus())*SR*100)/100;}
+// Gastos de UN día.
+function dayExpense(k){let e=0;EX.forEach(x=>{if(x.date===k)e+=x.amount;});return e;}
+// Sobrante del día = ingresos del día − gastos del día.
+function daySurplus(k){return dayIncome(k)-dayExpense(k);}
+// Cuánto ya apartaste ese día.
+function savedOn(k){let s=0;SAV.forEach(t=>{if(t.date===k)s+=t.amount;});return s;}
+// Sugerido del día = % del sobrante de ese día (nunca negativo).
+function savingsSuggested(k){return Math.round(Math.max(0,daySurplus(k))*SR*100)/100;}
 function apartar(){
   const s=sums();
   const amt=Math.round((parseFloat($('apAmt').value)||0)*100)/100;
@@ -704,8 +712,13 @@ function renderCalendar(){
 function renderSavings(){
   const s=sums();
   $('savDone').textContent=money(s.ahorros);
-  const sug=savingsSuggested();$('savSug').textContent=money(sug);
-  const pend=Math.max(0,sug-s.savTotal);$('savPend').textContent=money(pend);
+  const tk=tkey(),inc=dayIncome(tk),exp=dayExpense(tk);
+  $('savIncToday').textContent=money(inc);
+  $('savExpToday').textContent=money(exp);
+  $('savSurToday').textContent=money(inc-exp);
+  $('savRuleLbl').textContent=Math.round(SR*100);
+  const sug=savingsSuggested(tk);$('savSug').textContent=money(sug);
+  const pend=Math.max(0,Math.round((sug-savedOn(tk))*100)/100);
   if(document.activeElement!==$('apAmt'))$('apAmt').value=pend>0?pend.toFixed(2):'';
   $('savList').innerHTML=SAV.length?SAV.slice(0,12).map(t=>`<div class="li"><div class="li-l"><div class="li-ic">🐷</div><div class="li-tx"><div class="li-t">Apartado a ahorros</div><div class="li-d">${t.date} · desde <span class="li-w ${t.from}">${t.from==='banco'?'Banco':'Efectivo'}</span></div></div></div><div class="li-r"><div class="li-amt k">$${fm(t.amount)}</div><button class="li-del" onclick="undoSav(${t.id})" title="Devolver">↩</button></div></div>`).join(''):'<div class="empty">Todavía no apartaste nada.</div>';
 }
