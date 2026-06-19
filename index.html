@@ -533,14 +533,14 @@ function delExtra(id){EXTRA=EXTRA.filter(x=>x.id!==id);saveX();render();}
 
 /* ---- ahorro automático ---- */
 function dailySurplus(){
-  const by={};
-  for(const k in D)by[k]=(by[k]||0)+(D[k].com||0)+(D[k].tip||0);
-  EXTRA.forEach(x=>by[x.date]=(by[x.date]||0)+x.amount);
-  EX.forEach(e=>by[e.date]=(by[e.date]||0)-e.amount);
-  let pos=0;for(const k in by)pos+=Math.max(0,by[k]);
-  return pos;
+  // Neto real: total de ingresos (comisión + tips + extra) menos total de gastos.
+  let inc=0,exp=0;
+  for(const k in D)inc+=(D[k].com||0)+(D[k].tip||0);
+  EXTRA.forEach(x=>inc+=x.amount);
+  EX.forEach(e=>exp+=e.amount);
+  return inc-exp;
 }
-function savingsSuggested(){return Math.round(dailySurplus()*SR*100)/100;}
+function savingsSuggested(){return Math.round(Math.max(0,dailySurplus())*SR*100)/100;}
 function apartar(){
   const s=sums();
   const amt=Math.round((parseFloat($('apAmt').value)||0)*100)/100;
